@@ -1,0 +1,1501 @@
+app.py  ملف
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import session
+from datetime import datetime
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash
+import json
+import os
+
+# إنشاء تطبيق Flask:
+# هنا نقوم بإنشاء كائن من نوع Flask، وهو النواة الأساسية لتطبيق الويب.
+# __name__ هو اسم الملف الحالي، ويستخدم Flask هذا الاسم لتحديد مكان ملفات التطبيق مثل القوالب (templates) والملفات الثابتة (static).
+app = Flask(__name__)
+
+app.secret_key = "your_secret_key_here"  # استخدم مفتاحًا فريدًا وسريًا
+UPLOAD_FOLDER = 'static/uploads/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+BACKGROUND_FILE = 'background.txt'
+RESTAURANT_INFO_FILE = 'restaurant_info.json'  # ملف جديد لتخزين معلومات المطعم
+
+# إنشاء مجلد الصور إذا لم يكن موجودًا
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# تحميل المسار الأخير للصورة المحفوظة
+def load_background():
+    """
+    هذه الدالة تقوم بتحميل مسار الخلفية (الصورة) المخزنة مسبقًا.
+    - يتم التحقق من وجود ملف background.txt الذي يحتوي على مسار الصورة.
+    - إذا كان الملف موجودًا، يتم قراءة المسار وفحص ما إذا كانت الصورة لا تزال موجودة في المسار.
+    - إذا لم يكن الملف موجودًا أو إذا كانت الصورة غير موجودة، يتم إرجاع صورة افتراضية (default.jpg).
+    """
+    if os.path.exists(BACKGROUND_FILE):
+        with open(BACKGROUND_FILE, 'r', encoding='utf-8') as f:
+            path = f.read().strip()
+            return path if os.path.exists(path) else 'static/uploads/default.jpg'
+    return 'static/uploads/default.jpg'
+
+# حفظ المسار الجديد للصورة
+def save_background(path):
+    """
+    هذه الدالة تقوم بحفظ مسار الصورة الجديدة إلى ملف background.txt.
+    - يتم كتابة المسار الجديد للصورة في الملف.
+    - هذا المسار يمكن استخدامه لاحقًا لعرض الصورة كخلفية للموقع.
+    """
+    with open(BACKGROUND_FILE, 'w', encoding='utf-8') as f:
+        f.write(path)
+
+# تحميل معلومات المطعم
+def load_restaurant_info():
+    """تحميل معلومات المطعم من ملف JSON"""
+    # التحقق من وجود ملف JSON الخاص بمعلومات المطعم
+    if os.path.exists(RESTAURANT_INFO_FILE):
+        # فتح ملف JSON وقراءة البيانات منه
+        with open(RESTAURANT_INFO_FILE, 'r', encoding='utf-8') as f:
+            info = json.load(f)  # قراءة بيانات المطعم من الملف
+            
+            # إضافة قيم افتراضية إذا لم تكن الخصائص موجودة
+            info.setdefault('font_size', '24px')  # حجم الخط الافتراضي للنصوص
+            info.setdefault('font_color', '#000000')  # لون الخط الافتراضي للنصوص
+            info.setdefault('font_family', 'Arial')  # نوع الخط الافتراضي للنصوص
+            
+            # تحميل إعدادات خط الفئة إذا كانت موجودة
+            try:
+                # فتح ملف الإعدادات الخاص بخط الفئة وقراءة البيانات منه
+                with open('category_font_settings.json', 'r') as font_file:
+                    font_settings = json.load(font_file)  # قراءة إعدادات خط الفئة
+                    
+                    # تعيين حجم خط الفئة مع استبدال الوحدة "px" إذا كانت موجودة
+                    info['category_font_size'] = font_settings.get('font_size', '20px').replace('px', '')
+                    
+                    # تعيين نوع خط الفئة باستخدام القيمة من الإعدادات أو القيمة الافتراضية
+                    info['category_font_family'] = font_settings.get('font_family', 'Noto Naskh Arabic')
+            except FileNotFoundError:
+                # في حالة عدم وجود ملف إعدادات خط الفئة، تعيين القيم الافتراضية
+                info['category_font_size'] = '20'
+                info['category_font_family'] = 'Noto Naskh Arabic'
+            
+            return info  # إرجاع بيانات المطعم بعد التعديلات
+    # في حالة عدم وجود ملف JSON، يتم إرجاع قيم افتراضية
+    return {
+        "name": "اسم المطعم",  # اسم المطعم الافتراضي
+        "logo": "static/uploads/default_logo.png",  # شعار المطعم الافتراضي
+        "font_size": "24px",  # حجم الخط الافتراضي للنصوص
+        "font_color": "#000000",  # لون الخط الافتراضي للنصوص
+        "font_family": "Arial",  # نوع الخط الافتراضي للنصوص
+        "category_font_size": "20",  # حجم خط الفئة الافتراضي
+        "category_font_family": "Noto Naskh Arabic"  # نوع خط الفئة الافتراضي
+    }
+
+# حفظ معلومات المطعم
+def save_restaurant_info(info):
+    # حفظ بيانات المطعم في ملف JSON
+    with open(RESTAURANT_INFO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(info, f, ensure_ascii=False, indent=4)  # كتابة البيانات بصيغة JSON مع تجنب ترميز الأحرف غير ASCII وتنسيق النص
+
+# تحميل مسار الخلفية عند بدء تشغيل التطبيق
+background_image = load_background()
+
+# تحميل معلومات المطعم عند بدء تشغيل التطبيق
+restaurant_info = load_restaurant_info()
+
+def load_menu():
+    """تحميل القائمة من ملف JSON"""
+    try:
+        # فتح ملف القائمة وتحميل البيانات منه
+        with open('menu.json', 'r', encoding='utf-8') as file:
+            return json.load(file)  # قراءة بيانات القائمة من الملف
+    except FileNotFoundError:
+        return {}  # إذا لم يكن الملف موجودًا، يتم إرجاع قائمة فارغة
+
+def save_menu(menu):
+    """حفظ القائمة في ملف JSON"""
+    # حفظ بيانات القائمة في ملف JSON
+    with open('menu.json', 'w', encoding='utf-8') as file:
+        json.dump(menu, file, ensure_ascii=False, indent=4)  # كتابة بيانات القائمة بصيغة JSON مع تجنب ترميز الأحرف غير ASCII وتنسيق النص
+
+from datetime import datetime
+
+@app.route('/')
+def index():
+    """عرض القائمة الرئيسية"""
+    lang = request.args.get('lang', 'ar')  # الحصول على لغة الواجهة من معلمات الطلب (الافتراضي: العربية)
+    menu = load_menu()  # تحميل بيانات القائمة من ملف JSON
+    
+    # تحميل مسار الخلفية وتحويله إلى مسار يمكن استخدامه في HTML
+    bg_image = url_for('static', filename=load_background().replace('static/', ''))
+    
+    # إضافة معلمة زمنية لتجنب التخزين المؤقت للخلفية في المتصفح
+    timestamp = datetime.now().timestamp()
+    
+    # عرض الصفحة الرئيسية باستخدام قالب HTML وإرسال البيانات اللازمة
+    return render_template('index.html', menu=menu, lang=lang, bg_image=bg_image, restaurant_info=restaurant_info, timestamp=timestamp)
+
+@app.route('/update_restaurant_info', methods=['POST'])
+def update_restaurant_info():
+    """وظيفة الكود: تحديث معلومات المطعم بناءً على البيانات المرسلة من النموذج."""
+    global restaurant_info  # استخدام المتغير العام لتخزين معلومات المطعم
+    name_ar = request.form.get('name_ar')  # اسم المطعم بالعربية (إجباري)
+    name_en = request.form.get('name_en')  # اسم المطعم بالإنجليزية (اختياري)
+    logo = request.files.get('logo')  # ملف الشعار الجديد
+    
+    if name_ar:
+        restaurant_info['name'] = name_ar  # تحديث اسم المطعم بالعربية إذا تم إدخاله
+    if name_en:  # تحديث الاسم بالإنجليزية فقط إذا تم إدخاله
+        restaurant_info['name_en'] = name_en
+    if logo:  # إذا تم تحميل شعار جديد
+        logo_filename = os.path.join(app.config['UPLOAD_FOLDER'], logo.filename)  # تحديد مسار حفظ الشعار
+        logo.save(logo_filename)  # حفظ الشعار في المجلد المخصص
+        restaurant_info['logo'] = f'static/uploads/{logo.filename}'  # تحديث مسار الشعار في بيانات المطعم
+    
+    save_restaurant_info(restaurant_info)  # حفظ المعلومات المحدثة في ملف JSON
+    return jsonify({"success": True, "message": "تم تحديث معلومات المطعم بنجاح!"})  # إرجاع رسالة نجاح بصيغة JSON
+
+@app.route('/add_item', methods=['POST'])
+def add_item():
+    """وظيفة الكود: إضافة صنف جديد إلى القائمة بناءً على البيانات المرسلة من النموذج."""
+    category_ar = request.form.get('category')  # الفئة المختارة من القائمة الحالية
+    new_category_ar = request.form.get('new_category_ar')  # الفئة الجديدة (عربي)
+    new_category_en = request.form.get('new_category_en')  # الفئة الجديدة (إنجليزي)
+    name_ar = request.form.get('name_ar')  # اسم الصنف بالعربية
+    name_en = request.form.get('name_en')  # اسم الصنف بالإنجليزية
+    price = request.form.get('price')  # سعر الصنف
+    calories = request.form.get('calories', '')  # السعرات الحرارية (اختياري)
+    description_ar = request.form.get('description_ar', '')  # وصف الصنف بالعربية (اختياري)
+    description_en = request.form.get('description_en', '')  # وصف الصنف بالإنجليزية (اختياري)
+    image = request.files.get('image')  # صورة الصنف
+
+    # تحديد الفئة النهائية
+    if new_category_ar and new_category_en:  # إذا تم إدخال فئة جديدة
+        category_ar = new_category_ar  # استخدام الفئة الجديدة بالعربية
+        category_en = new_category_en  # استخدام الفئة الجديدة بالإنجليزية
+    elif category_ar:  # إذا تم اختيار فئة موجودة
+        menu = load_menu()  # تحميل القائمة الحالية
+        category_en = menu[category_ar]['name_en']  # الحصول على اسم الفئة بالإنجليزية من القائمة
+    else:  # إذا لم يتم تحديد فئة
+        return jsonify({"error": "Category is required"}), 400  # إرجاع خطأ يفيد بضرورة تحديد الفئة
+
+    # التحقق من الحقول الإجبارية
+    if not all([name_ar, name_en, price, image]):  # التحقق من وجود جميع الحقول الإجبارية
+        return jsonify({"error": "Missing required fields"}), 400  # إرجاع خطأ إذا كانت هناك حقول مفقودة
+
+    # حفظ الصورة
+    image_filename = os.path.join(app.config['UPLOAD_FOLDER'], image.filename)  # تحديد مسار حفظ الصورة
+    image.save(image_filename)  # حفظ الصورة في المجلد المخصص
+
+    # تحديث القائمة
+    menu = load_menu()  # تحميل القائمة الحالية
+    if category_ar not in menu:  # إذا كانت الفئة غير موجودة في القائمة
+        menu[category_ar] = {'name_en': category_en, 'items': []}  # إنشاء الفئة الجديدة وإضافة قسم للعناصر
+    menu[category_ar]['items'].append({  # إضافة الصنف الجديد إلى الفئة
+        'name': name_ar,
+        'name_en': name_en,
+        'price': price,
+        'calories': calories or '',  # استخدام القيمة إذا كانت موجودة، أو تركها فارغة
+        'description_ar': description_ar or '',  # استخدام القيمة إذا كانت موجودة، أو تركها فارغة
+        'description_en': description_en or '',  # استخدام القيمة إذا كانت موجودة، أو تركها فارغة
+        'image': image_filename  # مسار الصورة المحفوظة
+    })
+    save_menu(menu)  # حفظ القائمة المحدثة في ملف JSON
+    return jsonify({"message": "تمت إضافة الصنف بنجاح!"}), 201  # إرجاع رسالة نجاح بصيغة JSON
+#====================================================================
+
+@app.route('/delete_item', methods=['POST'])
+def delete_item():
+    """وظيفة الكود: حذف صنف معين من قائمة الطعام بناءً على الفئة والاسم."""
+    data = request.get_json()  # استقبال البيانات من الطلب بصيغة JSON
+    category_ar = data.get('category')  # الحصول على اسم الفئة بالعربية
+    item_name = data.get('item_name')  # الحصول على اسم الصنف المراد حذفه
+
+    # التأكد من وجود الفئة والصنف في القائمة
+    menu = load_menu()  # تحميل القائمة الحالية
+    if category_ar in menu:  # التحقق من وجود الفئة في القائمة
+        items = menu[category_ar]['items']  # الحصول على عناصر الفئة
+        # البحث عن الصنف في القائمة وحذفه
+        for item in items:
+            if item['name'] == item_name:  # التحقق من أن اسم الصنف يطابق
+                items.remove(item)  # حذف الصنف من القائمة
+                save_menu(menu)  # حفظ القائمة المحدثة
+                return jsonify({"message": "تم حذف الصنف بنجاح!"}), 200  # إرجاع رسالة نجاح
+    return jsonify({"error": "الصنف غير موجود"}), 404  # إرجاع خطأ إذا لم يتم العثور على الصنف
+
+
+@app.route('/get_category_color', methods=['GET'])
+def get_category_color():
+    """وظيفة الكود: الحصول على لون الفئة الحالي أو إرجاع اللون الافتراضي إذا لم يكن موجودًا."""
+    try:
+        with open('category_color.txt', 'r') as f:  # فتح ملف لون الفئة للقراءة
+            color = f.read().strip()  # قراءة اللون من الملف وإزالة المسافات الزائدة
+        return jsonify({'color': color})  # إرجاع اللون الحالي
+    except FileNotFoundError:
+        return jsonify({'color': '#ff0000'})  # إرجاع اللون الافتراضي (أحمر) إذا لم يكن الملف موجودًا
+
+
+@app.route('/delete_category', methods=['POST'])
+def delete_category():
+    """وظيفة الكود: حذف فئة كاملة من قائمة الطعام بناءً على اسم الفئة."""
+    data = request.get_json()  # استقبال البيانات من الطلب بصيغة JSON
+    category_ar = data.get('category')  # الحصول على اسم الفئة المراد حذفها
+
+    menu = load_menu()  # تحميل القائمة الحالية
+    if category_ar in menu:  # التحقق من وجود الفئة في القائمة
+        del menu[category_ar]  # حذف الفئة بالكامل
+        save_menu(menu)  # حفظ القائمة المحدثة
+        return jsonify({"message": "تم حذف الفئة بنجاح!"}), 200  # إرجاع رسالة نجاح
+    return jsonify({"error": "الفئة غير موجودة"}), 404  # إرجاع خطأ إذا لم يتم العثور على الفئة
+
+
+@app.route('/upload_background', methods=['POST'])
+def upload_background():
+    """وظيفة الكود: رفع خلفية جديدة وتحديث إعدادات الفئات مثل اللون وخصائص الخط."""
+    background_file = request.files.get('background')  # الحصول على ملف الخلفية الجديد
+    category_color = request.form.get('category_color', None)  # الحصول على لون الفئة الجديد
+    category_font_color = request.form.get('category_font_color', None)  # الحصول على لون خط الفئة الجديد
+    category_font_size = request.form.get('category_font_size', None)  # الحصول على حجم خط الفئة الجديد
+    category_font_family = request.form.get('category_font_family', None)  # الحصول على نوع خط الفئة الجديد
+    
+    # حفظ الخلفية (إذا تم رفعها)
+    if background_file:
+        background_filename = os.path.join(app.config['UPLOAD_FOLDER'], background_file.filename)  # تحديد مسار حفظ الخلفية
+        background_file.save(background_filename)  # حفظ ملف الخلفية
+        save_background(background_filename)  # تحديث مسار الخلفية في النظام
+    
+    # حفظ لون الفئة (إذا تم إرساله)
+    if category_color:
+        save_category_color(category_color)  # حفظ لون الفئة في ملف
+    
+    # حفظ خصائص خط الفئة (إذا تم إرسالها)
+    if category_font_color:
+        save_category_font_color(category_font_color)  # حفظ لون خط الفئة في ملف
+    
+    # حفظ حجم ونوع الخط في ملف جديد
+    if category_font_size or category_font_family:
+        font_settings = {}
+        try:
+            with open('category_font_settings.json', 'r') as f:  # تحميل إعدادات الخط الحالية
+                font_settings = json.load(f)
+        except FileNotFoundError:
+            pass
+        
+        if category_font_size:
+            font_settings['font_size'] = f"{category_font_size}px"  # تحديث حجم الخط
+        if category_font_family:
+            font_settings['font_family'] = category_font_family  # تحديث نوع الخط
+        
+        with open('category_font_settings.json', 'w') as f:  # حفظ الإعدادات المحدثة
+            json.dump(font_settings, f)
+    
+    return jsonify({'success': True, 'message': 'تم التحديث بنجاح!', 'timestamp': datetime.now().timestamp()})  # إرجاع رسالة نجاح
+
+
+@app.route('/get_category_font_settings', methods=['GET'])
+def get_category_font_settings():
+    """وظيفة الكود: الحصول على إعدادات خط الفئة الحالية أو إرجاع القيم الافتراضية إذا لم تكن موجودة."""
+    try:
+        with open('category_font_settings.json', 'r') as f:  # تحميل إعدادات خط الفئة
+            settings = json.load(f)
+            return jsonify({
+                'font_size': settings.get('font_size', '20px'),  # الحصول على حجم الخط أو إرجاع القيمة الافتراضية
+                'font_family': settings.get('font_family', 'Noto Naskh Arabic')  # الحصول على نوع الخط أو إرجاع القيمة الافتراضية
+            })
+    except FileNotFoundError:
+        return jsonify({
+            'font_size': '20px',  # القيمة الافتراضية لحجم الخط
+            'font_family': 'Noto Naskh Arabic'  # القيمة الافتراضية لنوع الخط
+        })
+
+#================================================================================================
+def save_category_color(color):
+    # حفظ اللون في قاعدة البيانات أو ملف
+    with open('category_color.txt', 'w') as f:
+        f.write(color)
+
+
+# حفظ لون خط الفئة (جديدة)
+def save_category_font_color(color):
+    with open('category_font_color.txt', 'w') as f:
+        f.write(color)
+
+@app.route('/get_category_font_color', methods=['GET'])
+def get_category_font_color():
+    try:
+        with open('category_font_color.txt', 'r') as f:
+            color = f.read().strip()
+        return jsonify({'color': color})
+    except FileNotFoundError:
+        return jsonify({'color': '#000000'})  # اللون الافتراضي أسود
+
+
+@app.route('/update_restaurant_name_style', methods=['POST'])
+def update_restaurant_name_style():
+    """تحديث خصائص اسم المطعم (حجم الخط، لون الخط، نوع الخط)"""
+    global restaurant_info
+
+    # استقبال البيانات من النموذج
+    font_size = request.form.get('font_size')
+    font_color = request.form.get('font_color')
+    font_family = request.form.get('font_family')
+
+    # التحقق من وجود البيانات
+    if not all([font_size, font_color, font_family]):
+        return jsonify({"success": False, "error": "جميع الحقول مطلوبة"}), 400
+
+    # تحديث خصائص اسم المطعم
+    restaurant_info['font_size'] = font_size
+    restaurant_info['font_color'] = font_color
+    restaurant_info['font_family'] = font_family
+
+    # حفظ التغييرات في ملف restaurant_info.json
+    save_restaurant_info(restaurant_info)
+
+    return jsonify({"success": True, "message": "تم تحديث خصائص اسم المطعم بنجاح!"})
+
+
+#===================================================================================================
+
+
+# تعريف المتغيرات العالمية
+ADMIN_USERNAME = "admin"  # اسم المستخدم الخاص بالمشرف
+ADMIN_PASSWORD = "admin_password"  # كلمة المرور الرئيسية (يمكن تغييرها فقط من الكود)
+
+RESTAURANT_USERNAME = "restaurant"  # اسم المستخدم الخاص بالمطعم
+RESTAURANT_PASSWORD = "admin"  # كلمة المرور الخاصة بالمطعم
+
+
+# مسار ملفات بيانات الاعتماد
+ADMIN_CREDENTIALS_FILE = "admin_credentials.txt"
+RESTAURANT_CREDENTIALS_FILE = "restaurant_credentials.txt"
+
+# دالة لقراءة بيانات الاعتماد من ملف
+def read_credentials(file_path):
+    if not os.path.exists(file_path):
+        return None, None
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        username = lines[0].strip()
+        password = lines[1].strip()
+    return username, password
+
+# دالة لكتابة بيانات الاعتماد إلى ملف
+def write_credentials(file_path, username, password):
+    with open(file_path, 'w') as f:
+        f.write(f"{username}\n{password}\n")
+# تسجيل الدخول
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # التحقق من بيانات المشرف
+        admin_username, admin_password = read_credentials(ADMIN_CREDENTIALS_FILE)
+        if username == admin_username and password == admin_password:
+            session['logged_in'] = True
+            session['is_admin'] = True
+            return redirect(url_for('admin_home'))  # توجيه المشرف إلى صفحة الوسيط الخاصة به
+        # التحقق من بيانات المطعم
+        restaurant_username, restaurant_password = read_credentials(RESTAURANT_CREDENTIALS_FILE)
+        if username == restaurant_username and password == restaurant_password:
+            session['logged_in'] = True
+            session['is_admin'] = False
+            return redirect(url_for('admin_panel'))  # توجيه المطعم مباشرة إلى لوحة التحكم
+        else:
+            return render_template('login.html', error="خطأ في اسم المستخدم أو كلمة المرور")
+    return render_template('login.html')
+
+# قراءة بيانات الاعتماد عند بدء التشغيل
+ADMIN_USERNAME, ADMIN_PASSWORD = read_credentials(ADMIN_CREDENTIALS_FILE)
+if ADMIN_USERNAME is None or ADMIN_PASSWORD is None:
+    ADMIN_USERNAME, ADMIN_PASSWORD = "admin", "admin_password"
+    write_credentials(ADMIN_CREDENTIALS_FILE, ADMIN_USERNAME, ADMIN_PASSWORD)
+
+RESTAURANT_USERNAME, RESTAURANT_PASSWORD = read_credentials(RESTAURANT_CREDENTIALS_FILE)
+if RESTAURANT_USERNAME is None or RESTAURANT_PASSWORD is None:
+    RESTAURANT_USERNAME, RESTAURANT_PASSWORD = "restaurant", "admin"
+    write_credentials(RESTAURANT_CREDENTIALS_FILE, RESTAURANT_USERNAME, RESTAURANT_PASSWORD)
+
+
+
+# تسجيل الخروج
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/change_password_page')
+def change_password_page():
+    # التحقق من أن المستخدم مسجل الدخول
+    if not session.get('logged_in'):
+        # إذا لم يكن المستخدم مسجل الدخول، يتم إعادة توجيهه إلى صفحة تسجيل الدخول
+        return redirect(url_for('login'))
+    
+    # إذا كان المستخدم مسجل الدخول، يتم عرض صفحة تغيير كلمة المرور
+    return render_template('change_password.html')
+
+# تحديث كلمة المرور
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    if not session.get('logged_in'):
+        return jsonify({"success": False, "error": "غير مصرح لك"}), 403
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    # إذا كان المستخدم هو المشرف
+    if session.get('is_admin'):
+        admin_username, admin_password = read_credentials(ADMIN_CREDENTIALS_FILE)
+        if current_password == admin_password:
+            write_credentials(ADMIN_CREDENTIALS_FILE, admin_username, new_password)
+            flash("تم تحديث كلمة المرور الرئيسية بنجاح!", "success")
+            return redirect(url_for('change_password_page'))
+        else:
+            flash("كلمة المرور الحالية غير صحيحة", "error")
+            return redirect(url_for('change_password_page'))
+    # إذا كان المستخدم صاحب المطعم
+    else:
+        restaurant_username, restaurant_password = read_credentials(RESTAURANT_CREDENTIALS_FILE)
+        if current_password == restaurant_password:
+            write_credentials(RESTAURANT_CREDENTIALS_FILE, restaurant_username, new_password)
+            flash("تم تحديث كلمة المرور بنجاح!", "success")
+            return redirect(url_for('login'))
+        else:
+            flash("كلمة المرور الحالية غير صحيحة", "error")
+            return redirect(url_for('login'))
+
+# صفحة تغيير كلمة المرور
+@app.route('/update_credentials', methods=['POST'])
+def update_credentials():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return jsonify({"success": False, "error": "غير مصرح لك"}), 403
+
+    new_username = request.form.get('new_username')
+    new_password = request.form.get('new_password')
+
+    # قراءة بيانات المطعم الحالية
+    restaurant_username, restaurant_password = read_credentials(RESTAURANT_CREDENTIALS_FILE)
+
+    # تحديث البيانات إذا كانت هناك قيم جديدة
+    if new_username:
+        restaurant_username = new_username
+    if new_password:
+        restaurant_password = new_password
+
+    # كتابة البيانات المحدثة إلى ملف
+    write_credentials(RESTAURANT_CREDENTIALS_FILE, restaurant_username, restaurant_password)
+    return jsonify({"success": True, "message": "تم تحديث بيانات المطعم بنجاح!"})
+# صفحة المشرف الرئيسية
+@app.route('/admin_home')
+def admin_home():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('login'))  # إعادة التوجيه إذا لم يكن المستخدم مشرفًا
+    return render_template('admin_home.html')
+
+# صفحة تحديث بيانات المطعم
+@app.route('/update_restaurant_credentials_page')
+def update_restaurant_credentials_page():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return redirect(url_for('login'))  # إعادة التوجيه إذا لم يكن المستخدم مشرفًا
+    return render_template('update_restaurant_credentials.html')
+
+# تحديث بيانات الأمان
+# تحديث بيانات المطعم
+@app.route('/update_restaurant_credentials', methods=['POST'])
+def update_restaurant_credentials():
+    if not session.get('logged_in') or not session.get('is_admin'):
+        return jsonify({"success": False, "error": "غير مصرح لك"}), 403
+
+    current_username = request.form.get('current_username')
+    current_password = request.form.get('current_password')
+    new_username = request.form.get('new_username')
+    new_password = request.form.get('new_password')
+
+    # قراءة بيانات المطعم الحالية
+    restaurant_username, restaurant_password = read_credentials(RESTAURANT_CREDENTIALS_FILE)
+
+    # التحقق من صحة البيانات الحالية
+    if current_username == restaurant_username and current_password == restaurant_password:
+        # تحديث البيانات إذا كانت هناك قيم جديدة
+        if new_username:
+            restaurant_username = new_username
+        if new_password:
+            restaurant_password = new_password
+
+        # كتابة البيانات المحدثة إلى ملف
+        write_credentials(RESTAURANT_CREDENTIALS_FILE, restaurant_username, restaurant_password)
+        return jsonify({"success": True, "message": "تم تحديث بيانات المطعم بنجاح!"})
+    else:
+        return jsonify({"success": False, "error": "بيانات المطعم الحالية غير صحيحة"}), 400
+
+# لوحة التحكم
+@app.route('/admin')
+def admin_panel():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    # تحميل القائمة
+    menu = load_menu()
+
+    # جلب لون الفئة ولون خط الفئة من الملفات
+    try:
+        with open('category_color.txt', 'r') as f:
+            category_color = f.read().strip()
+    except FileNotFoundError:
+        category_color = '#ff0000'  # اللون الافتراضي أحمر
+
+    try:
+        with open('category_font_color.txt', 'r') as f:
+            category_font_color = f.read().strip()
+    except FileNotFoundError:
+        category_font_color = '#000000'  # اللون الافتراضي أسود
+
+    # إنشاء كائن settings يحتوي على جميع الإعدادات
+    settings = {
+        "category_color": category_color,
+        "category_font_color": category_font_color
+    }
+
+    return render_template(
+        'dashboard.html',
+        menu=menu,
+        restaurant_info=restaurant_info,
+        settings=settings  # تمرير كائن settings إلى القالب
+    )
+
+# الحصول على خلفية الصفحة
+@app.route('/get_background', methods=['GET'])
+def get_background():
+    background_path = load_background()
+    return jsonify({
+        'background': background_path,
+        'timestamp': datetime.now().timestamp()
+    })
+
+
+
+
+if __name__ == '__main__':
+    #app.run(host="0.0.0.0", port=10000, debug=False)
+  #  app.run(host="192.168.100.90",port=5000,debug=False)
+    app.run(debug=True)
+
+    ===================================================================================================
+    index.html  ملف
+
+    <!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- إضافة خط Noto Naskh Arabic من Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ 'Menu' if lang == 'en' else 'القائمة' }}</title>
+</head>
+<body style="background-image: url('{{ bg_image }}?v={{ timestamp }}');">
+ <!--  style="background-image: url('{{ bg_image }}');">  -->
+
+       
+    <!-- زر تبديل اللغة -->
+    <a href="?lang={{ 'en' if lang == 'ar' else 'ar' }}" class="language-switcher">
+        {{ 'العربية' if lang == 'en' else 'English' }}
+    </a>
+
+    <!-- زر لوحة التحكم 
+    <div class="admin-panel">
+        <a href="/admin" class="admin-button">{{ 'Admin Panel' if lang == 'en' else 'لوحة التحكم' }}</a>
+    </div>
+              
+    -->
+    <!-- اسم المطعم والشعار -->
+    <div class="restaurant-header">
+        <img src="{{ restaurant_info['logo'] }}" alt="Logo" class="restaurant-logo">
+        <h1 class="restaurant-name" style="font-size: {{ restaurant_info.get('font_size', '24px') }}; color: {{ restaurant_info.get('font_color', '#000000') }}; font-family: {{ restaurant_info.get('font_family', 'Arial') }};">
+            {% if lang == 'en' and restaurant_info.get('name_en') %}
+                {{ restaurant_info['name_en'] }}
+            {% else %}
+                {{ restaurant_info['name'] }}
+            {% endif %}
+        </h1>
+    </div>
+
+    <!-- القائمة الرئيسية -->
+    <div class="menu-container">
+        <div class="category-grid">
+            {% for category, details in menu.items() %}
+            {% set category_id = category | replace(' ', '_') %}
+            <div class="category-box">
+                <!-- زر الفئة -->
+                <div class="category" data-category="{{ category_id }}" onclick="toggleItems('{{ category_id }}')">
+                    {{ details['name_en'] if lang == 'en' else category }}
+                </div>
+                <!-- عناصر الفئة -->
+                <ul class="menu-items" id="{{ category_id }}">
+                    {% for item in details['items'] %}
+                    <li class="item">
+                        <div class="item-layout">
+                            <!-- العمود الأيسر: الصورة -->
+                            <div class="left-column">
+                                <img src="{{ item['image'] }}" alt="{{ item['name'] }}">
+                            </div>
+                            <!-- العمود الأوسط: اسم الصنف، السعر، والسعرات الحرارية -->
+                            <div class="center-column">
+                                <!-- كتلة تحتوي على الاسم والسعر -->
+                                <div class="item-details">
+                                    <!-- اسم الصنف -->
+                                    <h4 class="item-name">{{ item['name_en'] if lang == 'en' else item['name'] }}</h4>
+                                    <!-- السعر ورمز العملة -->
+                                    <p class="price">{{ item['price'] }} {{ 'SAR' if lang == 'en' else '﷼' }}</p>
+                                </div>
+                                <!-- السعرات الحرارية -->
+                                {% if item['calories'] %}
+                                <span class="calories">{{ item['calories'] }}🔥</span>
+                                {% endif %}
+                            </div>
+                            <!-- العمود الأيمن: الوصف -->
+                            <div class="right-column">
+                                <!-- الوصف -->
+                                {% if item['description_ar'] or item['description_en'] %}
+                                <p class="description">{{ item['description_ar'] if lang == 'ar' else item['description_en'] }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    
+
+
+<!-- الشريط السفلي -->
+<footer class="footer-bar">
+    <div class="footer-content">
+        <!-- الجهة اليسرى: الحقوق والسنة -->
+        <div class="left-section">
+            <span class="rights">{{ 'All Rights Reserved' if lang == 'en' else 'جميع الحقوق محفوظة' }}</span>
+            <span class="current-year">&copy; <span id="current-year"></span></span>
+        </div>
+
+        <!-- الجهة اليمنى: تصميم وتطوير وتواصل معنا -->
+        <div class="right-section">
+            <span class="design-development">{{ 'Design & Development / A.O' if lang == 'en' else 'تصميم وتطوير /  ع.ع' }}</span>
+            <div class="whatsapp-contact">
+               <!-- <span>{{ 'Contact Us' if lang == 'en' else 'تواصل معنا' }}</span>
+                <a href="https://wa.me/qr/5W3XHGTHNZQAJ1" class="whatsapp-link" target="_blank">
+                    <img src="{{ url_for('static', filename='whatsapp-icon.png') }}" alt="WhatsApp">
+                </a>     -->
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+    <!-- جافا سكريبت لتبديل عرض العناصر -->
+    <script>
+     // تبديل عرض العناصر
+        function toggleItems(category) {
+            // تحديد القائمة المرتبطة بالفئة المحددة
+            var itemsList = document.getElementById(category);
+
+            // التحقق مما إذا كانت القائمة مرئية أم لا
+            if (itemsList.style.display === "block") {
+                // إذا كانت مرئية، قم بإخفائها
+                itemsList.style.display = "none";
+            } else {
+                // إذا كانت مخفية، قم بإخفاء جميع القوائم أولاً
+                document.querySelectorAll('.menu-items').forEach(function (list) {
+                    list.style.display = "none";
+                });
+                // ثم إظهار القائمة المحددة
+                itemsList.style.display = "block";
+            }
+        }
+
+
+
+    // قراءة لون الفئة من الخادم
+    fetch('/get_category_color')
+        .then(response => response.json())
+        .then(data => {
+            if (data.color) {
+                document.documentElement.style.setProperty('--category-color', data.color);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+
+        // قراءة لون خط الفئة من الخادم
+        fetch('/get_category_font_color')
+            .then(response => response.json())
+            .then(data => {
+                if (data.color) {
+                    document.documentElement.style.setProperty('--category-font-color', data.color);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            // تحديث الخلفية ديناميكيًا
+            function updateBackground() {
+                fetch('/get_background')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.body.style.backgroundImage = url('${data.background}?v=${data.timestamp}');
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                updateBackground();
+            });
+
+
+            // قراءة لون الفئة من الخادم
+            fetch('/get_category_color')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.color) {
+                        document.documentElement.style.setProperty('--category-color', data.color);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+
+            // قراءة لون خط الفئة من الخادم
+            fetch('/get_category_font_color')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.color) {
+                        document.documentElement.style.setProperty('--category-font-color', data.color);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+
+    // قراءة إعدادات خط الفئة من الخادم
+    fetch('/get_category_font_settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.font_size) {
+                document.documentElement.style.setProperty('--category-font-size', data.font_size);
+            }
+            if (data.font_family) {
+                document.documentElement.style.setProperty('--category-font-family', data.font_family);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+
+    
+
+    
+    // إضافة السنة الحالية إلى الشريط السفلي
+    const currentYear = new Date().getFullYear();
+    document.getElementById('current-year').textContent = currentYear;
+
+
+    // إظهار القسم عند التمرير لأسفل
+document.addEventListener("scroll", function () {
+    const scrollSection = document.getElementById("scroll-section");
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const pageHeight = document.body.offsetHeight;
+
+    // إذا كان المستخدم قريبًا من نهاية الصفحة
+    if (scrollPosition >= pageHeight - 20) {
+        scrollSection.classList.remove("hidden");
+    } else {
+        scrollSection.classList.add("hidden");
+    }
+});
+
+
+        
+    </script>
+
+  
+
+
+  
+
+    
+
+</body>
+</html>
+
+===========================================================================================================
+
+dashboard.html   ملف
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_dashboard.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon1.ico') }}" type="image/x-icon">
+</head>
+<body>
+
+    <!--زر الخروج-->
+    <a href="{{url_for('logout') }}" class="logout-button">خروج Exet</a>
+
+    <h1 class="dual-language">
+        <span class="ar">لوحة التحكم</span>
+        <span class="en">Dashboard</span>
+    </h1>
+<!-- قسم تحديث معلومات المطعم -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث معلومات المطعم</span>
+        <span class="en">Update Restaurant Info</span>
+    </h2>
+    <form id="restaurantInfoForm" enctype="multipart/form-data">
+        <input type="text" id="restaurant_name_ar" name="name_ar" placeholder="اسم المطعم (عربي)  Restaurant Name (Arabic)">
+        <input type="text" id="restaurant_name_en" name="name_en" placeholder="اسم المطعم (إنجليزي)  Restaurant Name (English)">
+        <label for="logo" class="dual-language">
+            <span class="ar">رفع شعار المطعم:</span>
+            <span class="en">Upload Restaurant Logo:</span>
+        </label>
+        <input type="file" id="logo" name="logo" accept="image/*">
+        <button type="submit" class="update-info-btn dual-language">
+            <span class="ar">تحديث المعلومات</span>
+            <span class="en">Update Info</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تعديل خصائص اسم المطعم -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تعديل خصائص اسم المطعم</span>
+        <span class="en">Update Restaurant Name Style</span>
+    </h2>
+    <form id="restaurantNameStyleForm">
+        <!-- حجم الخط -->
+        <label for="font_size" class="dual-language">
+            <span class="ar">حجم الخط:</span>
+            <span class="en">Font Size:</span>
+        </label>
+        <input type="number" id="font_size" name="font_size" placeholder="حجم الخط (px) Font Size" required>
+        <!-- لون الخط -->
+        <label for="font_color" class="dual-language">
+            <span class="ar">لون الخط:</span>
+            <span class="en">Font Color:</span>
+        </label>
+        <input type="color" id="font_color" name="font_color" required>
+        <!-- نوع الخط -->
+        <select id="font_family" name="font_family" required>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Noto Naskh Arabic" selected>Noto Naskh Arabic</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Amiri">Amiri</option>
+            <option value="Lateef">Lateef</option>
+        </select>
+        <button type="submit" class="update-style-btn dual-language">
+            <span class="ar">تحديث الخصائص</span>
+            <span class="en">Update Style</span>
+        </button>
+    </form>
+</div>
+
+
+
+    <!-- قسم رفع صورة الخلفية -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تغيير خلفية الموقع</span>
+        <span class="en">Change Background</span>
+    </h2>
+    <form id="backgroundForm" enctype="multipart/form-data">
+        <input type="file" name="background" id="background-input" accept="image/*">
+        <button type="button" onclick="uploadBackground()" class="upload-background-btn dual-language">
+            <span class="ar">تحديث الخلفية</span>
+            <span class="en">Update Background</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تحديث لون الفئة -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث لون الفئة</span>
+        <span class="en">Update Category Color</span>
+    </h2>
+    <form id="categoryColorForm">
+        <label for="category_color" class="dual-language">
+            <span class="ar">اختر لون الفئة:</span>
+            <span class="en">Choose Category Color:</span>
+        </label>
+        <input type="color" id="category_color" name="category_color" value="#ff0000">
+        <button type="button" onclick="updateCategoryColor()" class="update-category-color-btn dual-language">
+            <span class="ar">تحديث لون الفئة</span>
+            <span class="en">Update Category Color</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تحديث خصائص خط الفئة -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث خصائص خط الفئة</span>
+        <span class="en">Update Category Font Style</span>
+    </h2>
+    <form id="categoryFontStyleForm">
+        <!-- حجم خط الفئة -->
+        <label for="category_font_size" class="dual-language">
+            <span class="ar">حجم خط الفئة:</span>
+            <span class="en">Category Font Size:</span>
+        </label>
+        <input type="number" id="category_font_size" name="category_font_size" placeholder="حجم الخط (px) Font Size" value="16">
+        <!-- نوع خط الفئة -->
+        <label for="category_font_family" class="dual-language">
+            <span class="ar">نوع خط الفئة:</span>
+            <span class="en">Category Font Family:</span>
+        </label>
+        <select id="category_font_family" name="category_font_family">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Noto Naskh Arabic" selected>Noto Naskh Arabic</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Amiri">Amiri</option>
+            <option value="Lateef">Lateef</option>
+        </select>
+        <!-- لون خط الفئة -->
+        <label for="category_font_color" class="dual-language">
+            <span class="ar">لون خط الفئة:</span>
+            <span class="en">Category Font Color:</span>
+        </label>
+        <input type="color" id="category_font_color" name="category_font_color" value="#000000">
+        <button type="button" onclick="updateCategoryFontStyle()" class="update-category-font-btn dual-language">
+            <span class="ar">تحديث خصائص الخط</span>
+            <span class="en">Update Font Style</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم إضافة صنف جديد -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">إضافة صنف جديد</span>
+        <span class="en">Add New Item</span>
+    </h2>
+    <form id="addItemForm" enctype="multipart/form-data">
+        <!-- قائمة منسدلة للفئات -->
+        <select id="category_select" name="category" onchange="fillCategoryFields()">
+            <option value="" disabled selected>اختر فئة موجودة <> Select an existing category</option>
+            {% for category, data in menu.items() %}
+            <option value="{{ category }}">{{ category }} ({{ data['name_en'] }})</option>
+            {% endfor %}
+        </select>
+        <input type="text" id="new_category_ar" name="new_category_ar" placeholder="اسم الفئة (عربي) Category Name (Arabic)" required>
+        <input type="text" id="new_category_en" name="new_category_en" placeholder=" اسم الفئة (إنجليزي) Category Name (English)" required>
+        <input type="text" id="name_ar" name="name_ar" placeholder=" اسم الصنف (عربي) Item Name (Arabic)" required>
+        <input type="text" id="name_en" name="name_en" placeholder=" اسم الصنف (إنجليزي) Item Name (English)" required>
+        <input type="number" id="price" name="price" placeholder=" السعر Price" required>
+        <input type="number" id="calories" name="calories" placeholder=" السعرات الحرارية Calories">
+        <textarea id="description_ar" name="description_ar" placeholder=" الوصف (عربي)"></textarea>
+        <textarea id="description_en" name="description_en" placeholder=" الوصف (إنجليزي)"></textarea>
+        <label for="image" class="dual-language">
+            <span class="ar">ادخل صورة الصنف:</span>
+            <span class="en">Upload Item Image:</span>
+        </label>
+        <input type="file" id="image" name="image" accept="image/*" required>
+        <button type="submit" class="add-item-btn dual-language">
+            <span class="ar">إضافة الصنف</span>
+            <span class="en">Add Item</span>
+        </button>
+    </form>
+</div>
+    <!-- قسم قائمة الطعام -->
+<div class="menu-container">
+    <h2 class="dual-language">
+        <span class="ar">قائمة الطعام</span>
+        <span class="en">Menu</span>
+    </h2>
+    {% for category, data in menu.items() %}
+    <div class="category">
+        <!-- رأس الفئة مع زر الحذف -->
+        <div class="category-header">
+            <h3 class="dual-language">
+                <span class="ar">{{ category }}</span>
+                <span class="en">{{ data['name_en'] }}</span>
+            </h3>
+            <button class="delete-category-btn dual-language" onclick="deleteCategory('{{ category }}')">
+                <span class="ar">حذف الفئة</span>
+                <span class="en">Delete Category</span>
+            </button>
+        </div>
+        {% for item in data['items'] %}
+        <div class="item">
+            <!-- الصورة على اليمين -->
+            <img src="{{ item.image }}" alt="Image">
+            <!-- حاوية تحتوي على النصوص وزر الحذف -->
+            <div class="item-content">
+                <span class="dual-language">
+                    <span class="ar">{{ item.name }}</span>
+                    <span class="en">{{ item.name_en }}</span>
+                </span>
+                <button class="delete-btn dual-language" onclick="deleteItem('{{ category }}', '{{ item.name }}')">
+                    <span class="ar">حذف</span>
+                    <span class="en">Delete</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+
+   
+
+
+
+
+    <script>
+        // تخزين بيانات القائمة في متغير JavaScript
+        const menuData = JSON.parse('{{menu | tojson | safe}}');
+
+        // دالة لملء حقول الفئة عند اختيارها من القائمة المنسدلة
+        function fillCategoryFields() {
+            try {
+                const selectElement = document.getElementById('category_select');
+                const selectedCategory = selectElement.value;
+
+                if (selectedCategory && menuData[selectedCategory]) {
+                    const categoryData = menuData[selectedCategory];
+                    document.getElementById('new_category_ar').value = selectedCategory; // اسم الفئة بالعربي
+                    document.getElementById('new_category_en').value = categoryData.name_en; // اسم الفئة بالإنجليزي
+                } else {
+                    document.getElementById('new_category_ar').value = '';
+                    document.getElementById('new_category_en').value = '';
+                }
+            } catch (error) {
+                console.error("حدث خطأ أثناء ملء حقول الفئة:", error);
+                document.getElementById('new_category_ar').value = '';
+                document.getElementById('new_category_en').value = '';
+            }
+        }
+    
+        // إضافة صنف جديد
+        document.getElementById("addItemForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("/add_item", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        // حذف صنف
+        function deleteItem(category, itemName) {
+            fetch("/delete_item", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: category, item_name: itemName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // حذف فئة
+        function deleteCategory(category) {
+            fetch("/delete_category", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: category })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // رفع صورة الخلفية
+        function uploadBackground() {
+            const fileInput = document.getElementById('background-input');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('الرجاء اختيار صورة أولاً');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('background', file);
+            fetch('/upload_background', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم تحديث الخلفية بنجاح!');
+                    document.body.style.backgroundImage = url('${data.background}?v=${data.timestamp}');
+                } else {
+                    alert('فشل التحديث.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // تحديث معلومات المطعم
+        document.getElementById("restaurantInfoForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("/update_restaurant_info", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        // تحديث خصائص اسم المطعم
+    document.getElementById("restaurantNameStyleForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch("/update_restaurant_name_style", {
+            method: "POST",
+            body: formData
+        })
+        
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+
+    // تحديث معاينة لون الفئة
+    document.getElementById('category_color').addEventListener('input', function () {
+        const preview = document.getElementById('category_color_preview');
+        preview.style.backgroundColor = this.value;
+    });
+
+    // تحديث معاينة لون خط الفئة
+    document.getElementById('category_font_color').addEventListener('input', function () {
+        const preview = document.getElementById('category_font_color_preview');
+        preview.style.backgroundColor = this.value;
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // تحميل إعدادات الفئة
+        fetch('/get_category_font_settings')
+            .then(response => response.json())
+            .then(settings => {
+                if (settings) {
+                    // تعبئة حجم خط الفئة
+                    const categoryFontSizeInput = document.getElementById('category_font_size');
+                    if (settings.font_size) {
+                        categoryFontSizeInput.value = settings.font_size.replace('px', '');
+                    }
+    
+                    // تعبئة نوع خط الفئة
+                    const categoryFontFamilySelect = document.getElementById('category_font_family');
+                    if (settings.font_family) {
+                        categoryFontFamilySelect.value = settings.font_family;
+                    }
+    
+                    // تعبئة لون خط الفئة
+                    const categoryFontColorInput = document.getElementById('category_font_color');
+                    const categoryFontColorPreview = document.getElementById('category_font_color_preview');
+                    if (settings.font_color) {
+                        categoryFontColorInput.value = settings.font_color;
+                        categoryFontColorPreview.style.backgroundColor = settings.font_color;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+
+
+
+
+
+
+// تحديث لون الفئة
+function updateCategoryColor() {
+    const colorInput = document.getElementById('category_color');
+    const color = colorInput.value;
+    if (!color) {
+        alert('الرجاء اختيار لون أولاً');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('category_color', color);
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث لون الفئة بنجاح!');
+            document.getElementById('category_color_preview').style.backgroundColor = color;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// تحديث لون خط الفئة
+function updateCategoryFontColor() {
+    const fontColorInput = document.getElementById('category_font_color');
+    const fontColor = fontColorInput.value;
+    if (!fontColor) {
+        alert('الرجاء اختيار لون أولاً');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('category_font_color', fontColor);
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث لون خط الفئة بنجاح!');
+            document.getElementById('category_font_color_preview').style.backgroundColor = fontColor;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+// تحديث خصائص خط الفئة
+function updateCategoryFontStyle() {
+    const fontColor = document.getElementById('category_font_color').value;
+    const fontSize = document.getElementById('category_font_size').value;
+    const fontFamily = document.getElementById('category_font_family').value;
+    
+    const formData = new FormData();
+    if (fontColor) formData.append('category_font_color', fontColor);
+    if (fontSize) formData.append('category_font_size', fontSize);
+    if (fontFamily) formData.append('category_font_family', fontFamily);
+    
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث خصائص خط الفئة بنجاح!');
+            document.getElementById('category_font_color_preview').style.backgroundColor = fontColor;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch("/change_password", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
+document.getElementById("updateCredentialsForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch("/update_credentials", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
+
+    </script>
+
+    
+
+
+    
+</body>
+</html>
+
+
+===============================================================
+menu.json   ملف
+
+
+{
+    "الفئة الرئيسية": {
+        "name_en": "Main Section",
+        "items": [
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "يتم شرح وصف الصنف التفصيلي هنا عربي",
+                "description_en": "يتم شرح وصف الصنف التفصيلي هنا عربي",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            }
+        ]
+    },
+    "الفئة الرئيسية1": {
+        "name_en": "Main Section1",
+        "items": []
+    },
+    "الفئة الرئيسية 2": {
+        "name_en": "Main Section 2",
+        "items": []
+    },
+    "الفئة الرئيسية 3": {
+        "name_en": "Main Section 3",
+        "items": []
+    }
+}

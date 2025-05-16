@@ -1,0 +1,10 @@
+{
+    "name": "الاسم",
+    "logo": "static/uploads/fakkon.png",
+    "name_en": "Name",
+    "font_size": "6",
+    "font_color": "#989a23",
+    "font_family": "Lateef",
+    "category_font_size": "25",
+    "category_font_family": "Arial"
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- إضافة خط Noto Naskh Arabic من Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ 'Menu' if lang == 'en' else 'القائمة' }}</title>
+</head>
+<body style="background-image: url('{{ bg_image }}?v={{ timestamp }}');">
+ <!--  style="background-image: url('{{ bg_image }}');">  -->
+
+       
+    <!-- زر تبديل اللغة -->
+    <a href="?lang={{ 'en' if lang == 'ar' else 'ar' }}" class="language-switcher">
+        {{ 'العربية' if lang == 'en' else 'English' }}
+    </a>
+
+    <!-- زر لوحة التحكم 
+    <div class="admin-panel">
+        <a href="/admin" class="admin-button">{{ 'Admin Panel' if lang == 'en' else 'لوحة التحكم' }}</a>
+    </div>
+              
+    -->
+    <!-- اسم المطعم والشعار -->
+    <div class="restaurant-header">
+        <img src="{{ restaurant_info['logo'] }}" alt="Logo" class="restaurant-logo">
+        <h1 class="restaurant-name" style="font-size: {{ restaurant_info.get('font_size', '24px') }}; color: {{ restaurant_info.get('font_color', '#000000') }}; font-family: {{ restaurant_info.get('font_family', 'Arial') }};">
+            {% if lang == 'en' and restaurant_info.get('name_en') %}
+                {{ restaurant_info['name_en'] }}
+            {% else %}
+                {{ restaurant_info['name'] }}
+            {% endif %}
+        </h1>
+    </div>
+
+    <!-- القائمة الرئيسية -->
+    <div class="menu-container">
+        <div class="category-grid">
+            {% for category, details in menu.items() %}
+            {% set category_id = category | replace(' ', '_') %}
+            <div class="category-box">
+                <!-- زر الفئة -->
+                <div class="category" data-category="{{ category_id }}" onclick="toggleItems('{{ category_id }}')">
+                    {{ details['name_en'] if lang == 'en' else category }}
+                </div>
+                <!-- عناصر الفئة -->
+                <ul class="menu-items" id="{{ category_id }}">
+                    {% for item in details['items'] %}
+                    <li class="item">
+                        <div class="item-layout">
+                            <!-- العمود الأيسر: الصورة -->
+                            <div class="left-column">
+                                <img src="{{ item['image'] }}" alt="{{ item['name'] }}">
+                            </div>
+                            <!-- العمود الأوسط: اسم الصنف، السعر، والسعرات الحرارية -->
+                            <div class="center-column">
+                                <!-- كتلة تحتوي على الاسم والسعر -->
+                                <div class="item-details">
+                                    <!-- اسم الصنف -->
+                                    <h4 class="item-name">{{ item['name_en'] if lang == 'en' else item['name'] }}</h4>
+                                    <!-- السعر ورمز العملة -->
+                                    <p class="price">{{ item['price'] }} {{ 'SAR' if lang == 'en' else '﷼' }}</p>
+                                </div>
+                                <!-- السعرات الحرارية -->
+                                {% if item['calories'] %}
+                                <span class="calories">{{ item['calories'] }}🔥</span>
+                                {% endif %}
+                            </div>
+                            <!-- العمود الأيمن: الوصف -->
+                            <div class="right-column">
+                                <!-- الوصف -->
+                                {% if item['description_ar'] or item['description_en'] %}
+                                <p class="description">{{ item['description_ar'] if lang == 'ar' else item['description_en'] }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    
+
+
+<!-- الشريط السفلي -->
+<footer class="footer-bar">
+    <div class="footer-content">
+        <!-- الجهة اليسرى: الحقوق والسنة -->
+        <div class="left-section">
+            <span class="rights">{{ 'All Rights Reserved' if lang == 'en' else 'جميع الحقوق محفوظة' }}</span>
+            <span class="current-year">&copy; <span id="current-year"></span></span>
+        </div>
+
+        <!-- الجهة اليمنى: تصميم وتطوير وتواصل معنا -->
+        <div class="right-section">
+            <span class="design-development">{{ 'Design & Development / A.O' if lang == 'en' else 'تصميم وتطوير /  ع.ع' }}</span>
+            <div class="whatsapp-contact">
+               <!-- <span>{{ 'Contact Us' if lang == 'en' else 'تواصل معنا' }}</span>
+                <a href="https://wa.me/qr/5W3XHGTHNZQAJ1" class="whatsapp-link" target="_blank">
+                    <img src="{{ url_for('static', filename='whatsapp-icon.png') }}" alt="WhatsApp">
+                </a>     -->
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+    <!-- جافا سكريبت لتبديل عرض العناصر -->
+    <script>
+     // تبديل عرض العناصر
+        function toggleItems(category) {
+            // تحديد القائمة المرتبطة بالفئة المحددة
+            var itemsList = document.getElementById(category);
+
+            // التحقق مما إذا كانت القائمة مرئية أم لا
+            if (itemsList.style.display === "block") {
+                // إذا كانت مرئية، قم بإخفائها
+                itemsList.style.display = "none";
+            } else {
+                // إذا كانت مخفية، قم بإخفاء جميع القوائم أولاً
+                document.querySelectorAll('.menu-items').forEach(function (list) {
+                    list.style.display = "none";
+                });
+                // ثم إظهار القائمة المحددة
+                itemsList.style.display = "block";
+            }
+        }
+
+
+
+    // قراءة لون الفئة من الخادم
+    fetch('/get_category_color')
+        .then(response => response.json())
+        .then(data => {
+            if (data.color) {
+                document.documentElement.style.setProperty('--category-color', data.color);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+
+        // قراءة لون خط الفئة من الخادم
+        fetch('/get_category_font_color')
+            .then(response => response.json())
+            .then(data => {
+                if (data.color) {
+                    document.documentElement.style.setProperty('--category-font-color', data.color);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+            // تحديث الخلفية ديناميكيًا
+            function updateBackground() {
+                fetch('/get_background')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.body.style.backgroundImage = url('${data.background}?v=${data.timestamp}');
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                updateBackground();
+            });
+
+
+            // قراءة لون الفئة من الخادم
+            fetch('/get_category_color')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.color) {
+                        document.documentElement.style.setProperty('--category-color', data.color);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+
+            // قراءة لون خط الفئة من الخادم
+            fetch('/get_category_font_color')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.color) {
+                        document.documentElement.style.setProperty('--category-font-color', data.color);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+
+    // قراءة إعدادات خط الفئة من الخادم
+    fetch('/get_category_font_settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.font_size) {
+                document.documentElement.style.setProperty('--category-font-size', data.font_size);
+            }
+            if (data.font_family) {
+                document.documentElement.style.setProperty('--category-font-family', data.font_family);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+
+    
+
+    
+    // إضافة السنة الحالية إلى الشريط السفلي
+    const currentYear = new Date().getFullYear();
+    document.getElementById('current-year').textContent = currentYear;
+
+
+    // إظهار القسم عند التمرير لأسفل
+document.addEventListener("scroll", function () {
+    const scrollSection = document.getElementById("scroll-section");
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const pageHeight = document.body.offsetHeight;
+
+    // إذا كان المستخدم قريبًا من نهاية الصفحة
+    if (scrollPosition >= pageHeight - 20) {
+        scrollSection.classList.remove("hidden");
+    } else {
+        scrollSection.classList.add("hidden");
+    }
+});
+
+
+        
+    </script>
+
+  
+
+
+  
+
+    
+
+</body>
+</html>
+

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المشرف</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_admin.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon2.ico') }}" type="image/x-icon">
+</head>
+<body>
+    <div class="admin-home">
+        <h2> المشرف - Admin</h2>
+        <a href="/admin" class="btn">لوحة التحكم</a>
+        <a href="/update_restaurant_credentials_page" class="btn">تحديث بيانات المطعم</a>
+        <a href="/logout" class="btn">تسجيل الخروج</a>
+    </div>
+</body>
+</html>

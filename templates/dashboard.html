@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_dashboard.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon1.ico') }}" type="image/x-icon">
+</head>
+<body>
+
+    <!--زر الخروج-->
+    <a href="{{url_for('logout') }}" class="logout-button">خروج Exet</a>
+
+    <h1 class="dual-language">
+        <span class="ar">لوحة التحكم</span>
+        <span class="en">Dashboard</span>
+    </h1>
+<!-- قسم تحديث معلومات المطعم -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث معلومات المطعم</span>
+        <span class="en">Update Restaurant Info</span>
+    </h2>
+    <form id="restaurantInfoForm" enctype="multipart/form-data">
+        <input type="text" id="restaurant_name_ar" name="name_ar" placeholder="اسم المطعم (عربي)  Restaurant Name (Arabic)">
+        <input type="text" id="restaurant_name_en" name="name_en" placeholder="اسم المطعم (إنجليزي)  Restaurant Name (English)">
+        <label for="logo" class="dual-language">
+            <span class="ar">رفع شعار المطعم:</span>
+            <span class="en">Upload Restaurant Logo:</span>
+        </label>
+        <input type="file" id="logo" name="logo" accept="image/*">
+        <button type="submit" class="update-info-btn dual-language">
+            <span class="ar">تحديث المعلومات</span>
+            <span class="en">Update Info</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تعديل خصائص اسم المطعم -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تعديل خصائص اسم المطعم</span>
+        <span class="en">Update Restaurant Name Style</span>
+    </h2>
+    <form id="restaurantNameStyleForm">
+        <!-- حجم الخط -->
+        <label for="font_size" class="dual-language">
+            <span class="ar">حجم الخط:</span>
+            <span class="en">Font Size:</span>
+        </label>
+        <input type="number" id="font_size" name="font_size" placeholder="حجم الخط (px) Font Size" required>
+        <!-- لون الخط -->
+        <label for="font_color" class="dual-language">
+            <span class="ar">لون الخط:</span>
+            <span class="en">Font Color:</span>
+        </label>
+        <input type="color" id="font_color" name="font_color" required>
+        <!-- نوع الخط -->
+        <select id="font_family" name="font_family" required>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Noto Naskh Arabic" selected>Noto Naskh Arabic</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Amiri">Amiri</option>
+            <option value="Lateef">Lateef</option>
+        </select>
+        <button type="submit" class="update-style-btn dual-language">
+            <span class="ar">تحديث الخصائص</span>
+            <span class="en">Update Style</span>
+        </button>
+    </form>
+</div>
+
+
+
+    <!-- قسم رفع صورة الخلفية -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تغيير خلفية الموقع</span>
+        <span class="en">Change Background</span>
+    </h2>
+    <form id="backgroundForm" enctype="multipart/form-data">
+        <input type="file" name="background" id="background-input" accept="image/*">
+        <button type="button" onclick="uploadBackground()" class="upload-background-btn dual-language">
+            <span class="ar">تحديث الخلفية</span>
+            <span class="en">Update Background</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تحديث لون الفئة -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث لون الفئة</span>
+        <span class="en">Update Category Color</span>
+    </h2>
+    <form id="categoryColorForm">
+        <label for="category_color" class="dual-language">
+            <span class="ar">اختر لون الفئة:</span>
+            <span class="en">Choose Category Color:</span>
+        </label>
+        <input type="color" id="category_color" name="category_color" value="#ff0000">
+        <button type="button" onclick="updateCategoryColor()" class="update-category-color-btn dual-language">
+            <span class="ar">تحديث لون الفئة</span>
+            <span class="en">Update Category Color</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم تحديث خصائص خط الفئة -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">تحديث خصائص خط الفئة</span>
+        <span class="en">Update Category Font Style</span>
+    </h2>
+    <form id="categoryFontStyleForm">
+        <!-- حجم خط الفئة -->
+        <label for="category_font_size" class="dual-language">
+            <span class="ar">حجم خط الفئة:</span>
+            <span class="en">Category Font Size:</span>
+        </label>
+        <input type="number" id="category_font_size" name="category_font_size" placeholder="حجم الخط (px) Font Size" value="16">
+        <!-- نوع خط الفئة -->
+        <label for="category_font_family" class="dual-language">
+            <span class="ar">نوع خط الفئة:</span>
+            <span class="en">Category Font Family:</span>
+        </label>
+        <select id="category_font_family" name="category_font_family">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Noto Naskh Arabic" selected>Noto Naskh Arabic</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Amiri">Amiri</option>
+            <option value="Lateef">Lateef</option>
+        </select>
+        <!-- لون خط الفئة -->
+        <label for="category_font_color" class="dual-language">
+            <span class="ar">لون خط الفئة:</span>
+            <span class="en">Category Font Color:</span>
+        </label>
+        <input type="color" id="category_font_color" name="category_font_color" value="#000000">
+        <button type="button" onclick="updateCategoryFontStyle()" class="update-category-font-btn dual-language">
+            <span class="ar">تحديث خصائص الخط</span>
+            <span class="en">Update Font Style</span>
+        </button>
+    </form>
+</div>
+
+<!-- قسم إضافة صنف جديد -->
+<div class="card-container">
+    <h2 class="dual-language">
+        <span class="ar">إضافة صنف جديد</span>
+        <span class="en">Add New Item</span>
+    </h2>
+    <form id="addItemForm" enctype="multipart/form-data">
+        <!-- قائمة منسدلة للفئات -->
+        <select id="category_select" name="category" onchange="fillCategoryFields()">
+            <option value="" disabled selected>اختر فئة موجودة <> Select an existing category</option>
+            {% for category, data in menu.items() %}
+            <option value="{{ category }}">{{ category }} ({{ data['name_en'] }})</option>
+            {% endfor %}
+        </select>
+        <input type="text" id="new_category_ar" name="new_category_ar" placeholder="اسم الفئة (عربي) Category Name (Arabic)" required>
+        <input type="text" id="new_category_en" name="new_category_en" placeholder=" اسم الفئة (إنجليزي) Category Name (English)" required>
+        <input type="text" id="name_ar" name="name_ar" placeholder=" اسم الصنف (عربي) Item Name (Arabic)" required>
+        <input type="text" id="name_en" name="name_en" placeholder=" اسم الصنف (إنجليزي) Item Name (English)" required>
+        <input type="number" id="price" name="price" placeholder=" السعر Price" required>
+        <input type="number" id="calories" name="calories" placeholder=" السعرات الحرارية Calories">
+        <textarea id="description_ar" name="description_ar" placeholder=" الوصف (عربي)"></textarea>
+        <textarea id="description_en" name="description_en" placeholder=" الوصف (إنجليزي)"></textarea>
+        <label for="image" class="dual-language">
+            <span class="ar">ادخل صورة الصنف:</span>
+            <span class="en">Upload Item Image:</span>
+        </label>
+        <input type="file" id="image" name="image" accept="image/*" required>
+        <button type="submit" class="add-item-btn dual-language">
+            <span class="ar">إضافة الصنف</span>
+            <span class="en">Add Item</span>
+        </button>
+    </form>
+</div>
+    <!-- قسم قائمة الطعام -->
+<div class="menu-container">
+    <h2 class="dual-language">
+        <span class="ar">قائمة الطعام</span>
+        <span class="en">Menu</span>
+    </h2>
+    {% for category, data in menu.items() %}
+    <div class="category">
+        <!-- رأس الفئة مع زر الحذف -->
+        <div class="category-header">
+            <h3 class="dual-language">
+                <span class="ar">{{ category }}</span>
+                <span class="en">{{ data['name_en'] }}</span>
+            </h3>
+            <button class="delete-category-btn dual-language" onclick="deleteCategory('{{ category }}')">
+                <span class="ar">حذف الفئة</span>
+                <span class="en">Delete Category</span>
+            </button>
+        </div>
+        {% for item in data['items'] %}
+        <div class="item">
+            <!-- الصورة على اليمين -->
+            <img src="{{ item.image }}" alt="Image">
+            <!-- حاوية تحتوي على النصوص وزر الحذف -->
+            <div class="item-content">
+                <span class="dual-language">
+                    <span class="ar">{{ item.name }}</span>
+                    <span class="en">{{ item.name_en }}</span>
+                </span>
+                <button class="delete-btn dual-language" onclick="deleteItem('{{ category }}', '{{ item.name }}')">
+                    <span class="ar">حذف</span>
+                    <span class="en">Delete</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+
+   
+
+
+
+
+    <script>
+        // تخزين بيانات القائمة في متغير JavaScript
+        const menuData = JSON.parse('{{menu | tojson | safe}}');
+
+        // دالة لملء حقول الفئة عند اختيارها من القائمة المنسدلة
+        function fillCategoryFields() {
+            try {
+                const selectElement = document.getElementById('category_select');
+                const selectedCategory = selectElement.value;
+
+                if (selectedCategory && menuData[selectedCategory]) {
+                    const categoryData = menuData[selectedCategory];
+                    document.getElementById('new_category_ar').value = selectedCategory; // اسم الفئة بالعربي
+                    document.getElementById('new_category_en').value = categoryData.name_en; // اسم الفئة بالإنجليزي
+                } else {
+                    document.getElementById('new_category_ar').value = '';
+                    document.getElementById('new_category_en').value = '';
+                }
+            } catch (error) {
+                console.error("حدث خطأ أثناء ملء حقول الفئة:", error);
+                document.getElementById('new_category_ar').value = '';
+                document.getElementById('new_category_en').value = '';
+            }
+        }
+    
+        // إضافة صنف جديد
+        document.getElementById("addItemForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("/add_item", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        // حذف صنف
+        function deleteItem(category, itemName) {
+            fetch("/delete_item", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: category, item_name: itemName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // حذف فئة
+        function deleteCategory(category) {
+            fetch("/delete_category", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: category })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // رفع صورة الخلفية
+        function uploadBackground() {
+            const fileInput = document.getElementById('background-input');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('الرجاء اختيار صورة أولاً');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('background', file);
+            fetch('/upload_background', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم تحديث الخلفية بنجاح!');
+                    document.body.style.backgroundImage = url('${data.background}?v=${data.timestamp}');
+                } else {
+                    alert('فشل التحديث.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // تحديث معلومات المطعم
+        document.getElementById("restaurantInfoForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("/update_restaurant_info", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        // تحديث خصائص اسم المطعم
+    document.getElementById("restaurantNameStyleForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch("/update_restaurant_name_style", {
+            method: "POST",
+            body: formData
+        })
+        
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+
+    // تحديث معاينة لون الفئة
+    document.getElementById('category_color').addEventListener('input', function () {
+        const preview = document.getElementById('category_color_preview');
+        preview.style.backgroundColor = this.value;
+    });
+
+    // تحديث معاينة لون خط الفئة
+    document.getElementById('category_font_color').addEventListener('input', function () {
+        const preview = document.getElementById('category_font_color_preview');
+        preview.style.backgroundColor = this.value;
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // تحميل إعدادات الفئة
+        fetch('/get_category_font_settings')
+            .then(response => response.json())
+            .then(settings => {
+                if (settings) {
+                    // تعبئة حجم خط الفئة
+                    const categoryFontSizeInput = document.getElementById('category_font_size');
+                    if (settings.font_size) {
+                        categoryFontSizeInput.value = settings.font_size.replace('px', '');
+                    }
+    
+                    // تعبئة نوع خط الفئة
+                    const categoryFontFamilySelect = document.getElementById('category_font_family');
+                    if (settings.font_family) {
+                        categoryFontFamilySelect.value = settings.font_family;
+                    }
+    
+                    // تعبئة لون خط الفئة
+                    const categoryFontColorInput = document.getElementById('category_font_color');
+                    const categoryFontColorPreview = document.getElementById('category_font_color_preview');
+                    if (settings.font_color) {
+                        categoryFontColorInput.value = settings.font_color;
+                        categoryFontColorPreview.style.backgroundColor = settings.font_color;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+
+
+
+
+
+
+// تحديث لون الفئة
+function updateCategoryColor() {
+    const colorInput = document.getElementById('category_color');
+    const color = colorInput.value;
+    if (!color) {
+        alert('الرجاء اختيار لون أولاً');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('category_color', color);
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث لون الفئة بنجاح!');
+            document.getElementById('category_color_preview').style.backgroundColor = color;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// تحديث لون خط الفئة
+function updateCategoryFontColor() {
+    const fontColorInput = document.getElementById('category_font_color');
+    const fontColor = fontColorInput.value;
+    if (!fontColor) {
+        alert('الرجاء اختيار لون أولاً');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('category_font_color', fontColor);
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث لون خط الفئة بنجاح!');
+            document.getElementById('category_font_color_preview').style.backgroundColor = fontColor;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+// تحديث خصائص خط الفئة
+function updateCategoryFontStyle() {
+    const fontColor = document.getElementById('category_font_color').value;
+    const fontSize = document.getElementById('category_font_size').value;
+    const fontFamily = document.getElementById('category_font_family').value;
+    
+    const formData = new FormData();
+    if (fontColor) formData.append('category_font_color', fontColor);
+    if (fontSize) formData.append('category_font_size', fontSize);
+    if (fontFamily) formData.append('category_font_family', fontFamily);
+    
+    fetch('/upload_background', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث خصائص خط الفئة بنجاح!');
+            document.getElementById('category_font_color_preview').style.backgroundColor = fontColor;
+        } else {
+            alert('فشل التحديث.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch("/change_password", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
+document.getElementById("updateCredentialsForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch("/update_credentials", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
+
+    </script>
+
+    
+
+
+    
+</body>
+</html>

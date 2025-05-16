@@ -1,0 +1,294 @@
+/* تنسيق الصفحة الرئيسية للمشرف */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #f0f8ff, #ffffff);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.admin-home {
+    text-align: center;
+    background: linear-gradient(135deg, #ffffff, #f0f8ff);
+    border: 1px solid #ddd;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* تصميم العنوان */
+.admin-home h2 {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* تصميم الأزرار */
+.btn {
+    display: block;
+    margin: 15px auto;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    font-weight: bold;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    font-size: 1em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* تصميم زر تسجيل الخروج */
+.logout-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+}
+
+
+
+/* تأثير ظهور الصفحة */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/*==============================================================================*/
+/*تنسيق ملف   change_password.html*/
+
+/* تنسيق الصفحة العامة */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9; /* خلفية ناعمة */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    direction: rtl;
+}
+
+/* تنسيق الحاوية الرئيسية للنموذج */
+.form-container {
+    background-color: #ffffff; /* خلفية بيضاء */
+    border-radius: 15px; /* زوايا دائرية */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* ظل ناعم */
+    padding: 30px;
+    width: 60%;
+    max-width: 450px; /* عرض متناسب */
+    text-align: center;
+}
+
+/* تنسيق العنوان */
+h2 {
+    font-size: 1.8rem;
+    color: #333333;
+    margin-bottom: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* تنسيق العناصر داخل النموذج */
+label {
+    font-size: 1rem;
+    color: #555555;
+    display: block;
+    margin-bottom: 8px;
+    text-align: right;
+}
+
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    
+}
+
+input[type="password"]:focus {
+    border-color: #007bff; /* تغيير لون الحد عند التركيز */
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* تنسيق الزر */
+button[type="submit"] {
+    background-color: #007bff; /* لون أساسي */
+    color: white;
+    font-size: 1rem;
+    font-weight: 50;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3; /* لون أغمق عند التحويم */
+}
+
+/* تنسيق الرابط للعودة إلى لوحة التحكم */
+a {
+    display: inline-block;
+    margin-top: 20px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #0056b3; /* لون أغمق عند التحويم */
+}
+
+/* تنسيق الرسائل (نجاح أو خطأ) */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+
+li {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+li[style*="green"] {
+    background-color: #d4edda; /* خلفية نجاح */
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+li[style*="red"] {
+    background-color: #f8d7da; /* خلفية خطأ */
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/*==============================================================================*/
+/* تنسيقات عامة للشاشات الصغيرة */
+@media (max-width: 768px) {
+    /* تغيير شبكة الفئات إلى عمود واحد */
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* تصغير حجم الخط في العناوين */
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    /* تصغير حجم خط اسم المطعم */
+    .restaurant-name {
+        font-size: 2rem;
+    }
+
+    /* تصغير حجم الخط في الفئات */
+    .category {
+        font-size: 1.2rem;
+        padding: 15px;
+        height: auto;
+    }
+
+    /* تصغير حجم الخط في العناصر */
+    .item-name,
+    .price {
+        font-size: 0.8rem;
+    }
+
+    /* تصغير حجم الخط في الوصف */
+    .description {
+        font-size: 0.6rem;
+    }
+
+    /* تصغير حجم الصور */
+    .left-column {
+        width: 60px;
+        height: 60px;
+    }
+
+    /* تعديل المسافات بين الأعمدة */
+    .item-layout {
+        gap: 10px;
+    }
+}
+
+/* تنسيقات خاصة بالهواتف الذكية */
+@media (max-width: 480px) {
+    /* تصغير حجم الخط بشكل أكبر */
+    h1 {
+        font-size: 2rem;
+    }
+
+    .restaurant-name {
+        font-size: 1.5rem;
+    }
+
+    .category {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    .item-name,
+    .price {
+        font-size: 0.7rem;
+    }
+
+    .description {
+        font-size: 0.5rem;
+    }
+
+    /* تصغير حجم الصور بشكل أكبر */
+    .left-column {
+        width: 50px;
+        height: 50px;
+    }
+
+    /* تعديل المسافات بين الأعمدة */
+    .item-layout {
+        gap: 5px;
+    }
+
+    /* تصغير زر تبديل اللغة ولوحة التحكم */
+    .language-switcher,
+    .admin-button {
+        font-size: 0.7rem;
+        padding: 5px 10px;
+    }
+}

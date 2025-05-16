@@ -1,0 +1,127 @@
+{
+    "الفئة الرئيسية": {
+        "name_en": "Main Section",
+        "items": [
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "يتم شرح وصف الصنف التفصيلي هنا عربي",
+                "description_en": "يتم شرح وصف الصنف التفصيلي هنا عربي",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            },
+            {
+                "name": "الصنف",
+                "name_en": "item",
+                "price": "30",
+                "calories": "598",
+                "description_ar": "",
+                "description_en": "",
+                "image": "static/uploads/item.jpg"
+            }
+        ]
+    },
+    "الفئة الرئيسية1": {
+        "name_en": "Main Section1",
+        "items": []
+    },
+    "الفئة الرئيسية 2": {
+        "name_en": "Main Section 2",
+        "items": []
+    },
+    "الفئة الرئيسية 3": {
+        "name_en": "Main Section 3",
+        "items": []
+    }
+}

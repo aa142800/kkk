@@ -1,0 +1,116 @@
+/* إعدادات عامة */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f9;
+}
+
+/* الحاوية الرئيسية */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* الحاوية الخارجية للصندوق */
+.login-box {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* عنوان الصفحة */
+.login-box h2 {
+    margin-bottom: 20px;
+    color: #333333;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* رسالة الخطأ */
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+/* تنسيق الخانات */
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center; /* توسيط النص داخل الحقل */
+}
+
+/* تنسيق النص الافتراضي داخل الحقول */
+.login-box input::placeholder {
+    text-align: center; /* توسيط النص داخل الحقل */
+    color: #999999; /* لون النص الافتراضي */
+    font-size: 16px; /* حجم الخط */
+}
+
+/* زر الدخول */
+.login-box button {
+    width: 50%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-box button:hover {
+    background-color: #0056b3;
+}
+
+/* رابط تغيير كلمة المرور */
+.change-password-link {
+    display: block;
+    margin-top: 15px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.change-password-link:hover {
+    color: #0056b3;
+}
+
+/* استجابة للشاشات الصغيرة */
+@media (max-width: 600px) {
+    .login-box {
+        padding: 20px;
+    }
+
+    .login-box h2 {
+        font-size: 20px;
+    }
+
+    .login-box input,
+    .login-box button {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
