@@ -570,7 +570,3 @@ def get_background():
 
 
 
-if __name__ == '__main__':
-    #app.run(host="0.0.0.0", port=10000, debug=False)
-  #  app.run(host="192.168.100.90",port=5000,debug=False)
-    app.run(debug=True)
