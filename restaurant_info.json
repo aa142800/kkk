@@ -1,10 +1,10 @@
 {
-    "name": "الاسم",
+    "name": "مخبز",
     "logo": "static/uploads/fakkon.png",
-    "name_en": "Name",
+    "name_en": "Bakery",
     "font_size": "6",
     "font_color": "#989a23",
     "font_family": "Lateef",
-    "category_font_size": "25",
+    "category_font_size": "16",
     "category_font_family": "Arial"
 }

@@ -123,5 +123,19 @@
     "الفئة الرئيسية 3": {
         "name_en": "Main Section 3",
         "items": []
+    },
+    "قهوه باردة": {
+        "name_en": "iced coffee",
+        "items": [
+            {
+                "name": "فرابتشينو",
+                "name_en": "Frappuccino",
+                "price": "17",
+                "calories": "354",
+                "description_ar": "مزيج رائع من القهوة الباردة، الحليب، والثلج المجروش، يُخلط لينتج مشروبًا كريميًا ومنعشًا، يُقدّم بنكهات متعددة مثل الشوكولاتة، الكراميل، أو الفانيليا. مثالي لأيام الصيف ولمحبّي القهوة الباردة.",
+                "description_en": "A delicious blend of chilled coffee, milk, and crushed ice, blended to a smooth, creamy texture. Served in various flavors like chocolate, caramel, or vanilla. Perfect for hot days and iced coffee lovers",
+                "image": "static/uploads/frappuccino.jpg"
+            }
+        ]
     }
 }
